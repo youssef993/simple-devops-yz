@@ -1,0 +1,36 @@
+# Service NodePort pour le frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-project-service
+spec:
+  selector:
+    app: simple-project
+  ports:
+    - protocol: TCP
+      port: 80       # port du service
+      targetPort: 80 # port exposé dans le conteneur
+      nodePort: 32320  # port externe du Node
+  type: NodePort
+
+---
+# Deployment simple-project
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-project-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-project
+  template:
+    metadata:
+      labels:
+        app: simple-project
+    spec:
+      containers:
+      - name: simple-project
+        image: youssefz93/simple-devops-yz
+        ports:
+          - containerPort: 80
