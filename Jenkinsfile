@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        VM_IP = "192.168.56.11"           // IP de ta VM VirtualBox
+        VM_USER = "vagrant"               // utilisateur de la VM
+        DOCKER_IMAGE = "youssefz93/simple-devops-yz:latest"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -13,7 +19,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 bat """
-                docker build -t youssefz93/simple-devops-yz .
+                docker build -t %DOCKER_IMAGE% .
                 """
             }
         }
@@ -31,8 +37,19 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 bat """
-                docker push youssefz93/simple-devops-yz
+                docker push %DOCKER_IMAGE%
                 """
+            }
+        }
+
+        stage('Deploy to VM') {
+            steps {
+                sshagent(credentials: ['vagrant-ssh']) { // ID de la clé SSH dans Jenkins
+                    bat """
+                    ssh -o StrictHostKeyChecking=no %VM_USER%@%VM_IP% ^
+                    "kubectl set image deployment/simple-devops-yz simple-devops-yz=%DOCKER_IMAGE% --record && kubectl rollout status deployment/simple-devops-yz"
+                    """
+                }
             }
         }
     }
