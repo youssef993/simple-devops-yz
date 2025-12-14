@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        VM_IP = "192.168.56.11"
-        VM_USER = "vagrant"
+        VM_IP = "192.168.56.11"           // IP de ta VM VirtualBox
+        VM_USER = "vagrant"               // utilisateur de la VM
         DOCKER_IMAGE = "youssefz93/simple-devops-yz:latest"
     }
 
@@ -19,38 +19,37 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 bat """
-                docker build -t ${env.DOCKER_IMAGE} .
+                docker build -t %DOCKER_IMAGE% .
                 """
             }
         }
-
+        
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([string(credentialsId: 'DOCKER_PASS', variable: 'DOCKER_PWD')]) {
                     bat """
-                    echo ${env.DOCKER_PWD} | docker login -u youssefz93 --password-stdin
+                    echo %DOCKER_PWD% | docker login -u youssefz93 --password-stdin
                     """
                 }
             }
         }
-
+        
         stage('Push Docker Image') {
             steps {
                 bat """
-                docker push ${env.DOCKER_IMAGE}
+                docker push %DOCKER_IMAGE%
                 """
             }
         }
 
         stage('Deploy to VM') {
             steps {
-                sshagent(credentials: ['vagrant-ssh']) { // ID de la clé SSH dans Jenkins
-                    bat """
-                    ssh -o StrictHostKeyChecking=no %VM_USER%@%VM_IP% ^
-                    "kubectl set image deployment/simple-devops-yz simple-devops-yz=%DOCKER_IMAGE% --record && kubectl rollout status deployment/simple-devops-yz"
-                    """
-                }
+                bat """
+                ssh -i C:/JenkinsKeys/private_key -o StrictHostKeyChecking=no ${env.VM_USER}@${env.VM_IP} ^
+                "kubectl set image deployment/simple-devops-yz simple-devops-yz=${env.DOCKER_IMAGE} --record && kubectl rollout status deployment/simple-devops-yz"
+                """
             }
         }
+
     }
 }
