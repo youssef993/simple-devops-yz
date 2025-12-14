@@ -44,7 +44,7 @@ pipeline {
 
        steps {
         bat """
-        ssh -i C:\Users\youss\Desktop\ansible-formation\.vagrant\machines\node-1\virtualbox\private_key -o StrictHostKeyChecking=no vagrant@192.168.56.11 ^
+        ssh -i C:\\Users\\youss\\Desktop\\ansible-formation\\.vagrant\\machines\\node-1\\virtualbox\\private_key -o StrictHostKeyChecking=no vagrant@192.168.56.11 ^
         "kubectl set image deployment/simple-devops-yz simple-devops-yz=youssefz93/simple-devops-yz:latest --record && kubectl rollout status deployment/simple-devops-yz"
         """
     }
