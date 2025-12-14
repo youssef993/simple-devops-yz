@@ -42,12 +42,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to VM') {
             steps {
-                bat """
-                ssh -i C:/Users/youss/Desktop/ansible-formation/.vagrant/machines/node-1/virtualbox/private_key -o StrictHostKeyChecking=no vagrant@${env.VM_IP} ^
-                "kubectl set image deployment/simple-devops-yz simple-devops-yz=${env.DOCKER_IMAGE} --record && kubectl rollout status deployment/simple-devops-yz"
-                """
+                sshagent(credentials: ['vagrant-ssh']) { // ID de la clé SSH dans Jenkins
+                    bat """
+                    ssh -o StrictHostKeyChecking=no %VM_USER%@%VM_IP% ^
+                    "kubectl set image deployment/simple-devops-yz simple-devops-yz=%DOCKER_IMAGE% --record && kubectl rollout status deployment/simple-devops-yz"
+                    """
+                }
             }
         }
     }
